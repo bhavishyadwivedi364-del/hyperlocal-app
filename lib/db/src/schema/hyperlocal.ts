@@ -29,7 +29,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "cancelled",
 ]);
 
-export const paymentMethodEnum = pgEnum("payment_method", ["cod", "online"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["cod", "online", "upi"]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [
   "pending",
@@ -61,6 +61,7 @@ export const userProfilesTable = pgTable("user_profiles", {
   phone: text("phone"),
   address: text("address"),
   city: text("city"),
+  pincode: text("pincode"),
   role: userRoleEnum("role").notNull().default("customer"),
   profileImageUrl: text("profile_image_url"),
   language: text("language").default("en"),
@@ -81,6 +82,7 @@ export const categoriesTable = pgTable("categories", {
   icon: text("icon").notNull(),
   color: text("color").notNull(),
   description: text("description"),
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -98,14 +100,21 @@ export const shopsTable = pgTable("shops", {
   ownerId: text("owner_id").notNull().references(() => usersTable.id),
   address: text("address"),
   city: text("city"),
+  pincode: text("pincode"),
   phone: text("phone"),
+  email: text("email"),
   imageUrl: text("image_url"),
+  bannerUrl: text("banner_url"),
+  gstNumber: text("gst_number"),
+  latitude: numeric("latitude", { precision: 10, scale: 6 }),
+  longitude: numeric("longitude", { precision: 10, scale: 6 }),
   rating: numeric("rating", { precision: 3, scale: 2 }),
   reviewCount: integer("review_count").default(0),
   status: shopStatusEnum("status").notNull().default("pending"),
   isOpen: boolean("is_open").default(true),
   deliveryTime: text("delivery_time"),
   minimumOrder: numeric("minimum_order", { precision: 10, scale: 2 }),
+  deliveryCharge: numeric("delivery_charge", { precision: 10, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -131,6 +140,8 @@ export const productsTable = pgTable("products", {
   rating: numeric("rating", { precision: 3, scale: 2 }),
   reviewCount: integer("review_count").default(0),
   isFeatured: boolean("is_featured").default(false),
+  hsn: text("hsn"),
+  gstPercent: numeric("gst_percent", { precision: 5, scale: 2 }).default("5"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -162,11 +173,17 @@ export const ordersTable = pgTable("orders", {
   shopId: integer("shop_id").notNull().references(() => shopsTable.id),
   status: orderStatusEnum("status").notNull().default("placed"),
   totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
+  subtotal: numeric("subtotal", { precision: 10, scale: 2 }),
+  gstAmount: numeric("gst_amount", { precision: 10, scale: 2 }).default("0"),
+  deliveryCharge: numeric("delivery_charge", { precision: 10, scale: 2 }).default("0"),
   paymentMethod: paymentMethodEnum("payment_method").notNull(),
   paymentStatus: paymentStatusEnum("payment_status").default("pending"),
+  razorpayOrderId: text("razorpay_order_id"),
   deliveryAddress: text("delivery_address"),
   deliveryNotes: text("delivery_notes"),
   estimatedDelivery: text("estimated_delivery"),
+  customerName: text("customer_name"),
+  customerPhone: text("customer_phone"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -185,6 +202,8 @@ export const orderItemsTable = pgTable("order_items", {
   productImageUrl: text("product_image_url"),
   quantity: integer("quantity").notNull(),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  mrp: numeric("mrp", { precision: 10, scale: 2 }),
+  gstPercent: numeric("gst_percent", { precision: 5, scale: 2 }).default("5"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

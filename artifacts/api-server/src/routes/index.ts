@@ -10,6 +10,7 @@ import usersRouter from "./users";
 import feedbackRouter from "./feedback";
 import sellerRouter from "./seller";
 import adminRouter from "./admin";
+import uploadRouter from "./upload";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(usersRouter);
 router.use(feedbackRouter);
 router.use(sellerRouter);
 router.use(adminRouter);
+router.use(uploadRouter);
 
 export default router;

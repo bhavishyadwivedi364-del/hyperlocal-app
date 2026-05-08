@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetUserProfile } from "@workspace/api-client-react";
 
+import { I18nProvider } from "@/lib/i18n";
 import { MainLayout } from "./components/layout";
 import { AdminLayout } from "./components/admin-layout";
 import { SellerLayout } from "./components/seller-layout";
@@ -20,6 +21,8 @@ import { CheckoutPage } from "@/pages/checkout";
 import { OrdersPage } from "@/pages/orders";
 import { OrderDetailPage } from "@/pages/order-detail";
 import { ProfilePage } from "@/pages/profile";
+import { ContactPage } from "@/pages/contact";
+import { NearbyShopsPage } from "@/pages/nearby";
 import { SellerDashboard } from "@/pages/seller/dashboard";
 import { SellerProducts } from "@/pages/seller/products";
 import { SellerOrders } from "@/pages/seller/orders";
@@ -50,8 +53,8 @@ function Router() {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">H</span>
+          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <span className="text-primary-foreground font-bold text-xl">H</span>
           </div>
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
@@ -111,6 +114,8 @@ function Router() {
         <Route path="/orders" component={OrdersPage} />
         <Route path="/order/:id" component={OrderDetailPage} />
         <Route path="/profile" component={ProfilePage} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/nearby" component={NearbyShopsPage} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
@@ -119,14 +124,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <I18nProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </I18nProvider>
   );
 }
 

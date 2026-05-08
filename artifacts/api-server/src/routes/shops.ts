@@ -1,10 +1,24 @@
 import { Router } from "express";
-import { db, shopsTable, categoriesTable, usersTable } from "@workspace/db";
+import { db, shopsTable, categoriesTable } from "@workspace/db";
 import { eq, ilike, and, type SQL } from "drizzle-orm";
 
 const router = Router();
 
-function formatShop(shop: typeof shopsTable.$inferSelect, categoryName?: string | null, ownerName?: string | null) {
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatShop(
+  shop: typeof shopsTable.$inferSelect,
+  categoryName?: string | null,
+  distanceKm?: number,
+) {
   return {
     id: shop.id,
     name: shop.name,
@@ -12,49 +26,67 @@ function formatShop(shop: typeof shopsTable.$inferSelect, categoryName?: string 
     categoryId: shop.categoryId,
     categoryName: categoryName ?? null,
     ownerId: shop.ownerId,
-    ownerName: ownerName ?? null,
     address: shop.address,
     city: shop.city,
+    pincode: shop.pincode,
     phone: shop.phone,
+    email: shop.email,
     imageUrl: shop.imageUrl,
+    bannerUrl: shop.bannerUrl,
+    gstNumber: shop.gstNumber,
+    latitude: shop.latitude ? Number(shop.latitude) : null,
+    longitude: shop.longitude ? Number(shop.longitude) : null,
     rating: shop.rating ? Number(shop.rating) : null,
     reviewCount: shop.reviewCount,
     status: shop.status,
     isOpen: shop.isOpen,
     deliveryTime: shop.deliveryTime,
     minimumOrder: shop.minimumOrder ? Number(shop.minimumOrder) : null,
+    deliveryCharge: shop.deliveryCharge ? Number(shop.deliveryCharge) : 0,
+    distanceKm: distanceKm ?? null,
     createdAt: shop.createdAt.toISOString(),
   };
 }
 
 router.get("/shops", async (req, res) => {
   try {
-    const { category, search, limit } = req.query as Record<string, string>;
+    const { category, search, limit, lat, lng, radius } = req.query as Record<string, string>;
     const lim = Math.min(parseInt(limit ?? "20", 10), 100);
 
     const conditions: SQL[] = [eq(shopsTable.status, "active")];
-
-    if (search) {
-      conditions.push(ilike(shopsTable.name, `%${search}%`));
-    }
+    if (search) conditions.push(ilike(shopsTable.name, `%${search}%`));
 
     const results = await db
-      .select({
-        shop: shopsTable,
-        categoryName: categoriesTable.name,
-        categorySlug: categoriesTable.slug,
-      })
+      .select({ shop: shopsTable, categoryName: categoriesTable.name, categorySlug: categoriesTable.slug })
       .from(shopsTable)
       .leftJoin(categoriesTable, eq(shopsTable.categoryId, categoriesTable.id))
       .where(and(...conditions))
-      .limit(lim);
+      .limit(100); // fetch more for filtering
 
     let filtered = results;
-    if (category) {
-      filtered = results.filter((r) => r.categorySlug === category);
+    if (category) filtered = results.filter((r) => r.categorySlug === category);
+
+    // GPS filtering
+    let withDistance = filtered.map((r) => {
+      let distanceKm: number | undefined;
+      if (lat && lng && r.shop.latitude && r.shop.longitude) {
+        distanceKm = haversineKm(
+          parseFloat(lat),
+          parseFloat(lng),
+          Number(r.shop.latitude),
+          Number(r.shop.longitude),
+        );
+      }
+      return { ...r, distanceKm };
+    });
+
+    if (lat && lng && radius) {
+      const r = parseFloat(radius);
+      withDistance = withDistance.filter((r_) => r_.distanceKm === undefined || r_.distanceKm <= r);
+      withDistance.sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
     }
 
-    res.json(filtered.map((r) => formatShop(r.shop, r.categoryName)));
+    res.json(withDistance.slice(0, lim).map((r) => formatShop(r.shop, r.categoryName, r.distanceKm)));
   } catch (err) {
     req.log.error({ err }, "Failed to list shops");
     res.status(500).json({ error: "Internal server error" });

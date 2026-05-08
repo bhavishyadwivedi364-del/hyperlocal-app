@@ -2,7 +2,8 @@ import * as oidc from "openid-client";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { GetCurrentAuthUserResponse } from "@workspace/api-zod";
 import { z } from "zod";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, phoneOtpsTable } from "@workspace/db";
+import { eq, and, gt } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
@@ -15,25 +16,18 @@ import {
   type SessionData,
 } from "../lib/auth";
 
-const ExchangeMobileAuthorizationCodeBody = z.object({
-  code: z.string(),
-  code_verifier: z.string(),
-  redirect_uri: z.string(),
-  state: z.string(),
-  nonce: z.string().optional(),
-});
-
-const ExchangeMobileAuthorizationCodeResponse = z.object({ token: z.string() });
-const LogoutMobileSessionResponse = z.object({ success: z.boolean() });
+const SendOtpBody = z.object({ phone: z.string().min(10).max(15) });
+const VerifyOtpBody = z.object({ phone: z.string(), otp: z.string().length(6) });
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
+const OTP_TTL_MS = 10 * 60 * 1000;
+const MAX_OTP_ATTEMPTS = 5;
 
 const router: IRouter = Router();
 
 function getOrigin(req: Request): string {
   const proto = req.headers["x-forwarded-proto"] || "https";
-  const host =
-    req.headers["x-forwarded-host"] || req.headers["host"] || "localhost";
+  const host = req.headers["x-forwarded-host"] || req.headers["host"] || "localhost";
   return `${proto}://${host}`;
 }
 
@@ -58,10 +52,12 @@ function setOidcCookie(res: Response, name: string, value: string) {
 }
 
 function getSafeReturnTo(value: unknown): string {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
-    return "/";
-  }
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
   return value;
+}
+
+function generateOtp(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 async function upsertUser(claims: Record<string, unknown>) {
@@ -72,25 +68,131 @@ async function upsertUser(claims: Record<string, unknown>) {
     lastName: (claims.last_name as string) || null,
     profileImageUrl: (claims.profile_image_url || claims.picture) as string | null,
   };
-
   const [user] = await db
     .insert(usersTable)
     .values(userData)
-    .onConflictDoUpdate({
-      target: usersTable.id,
-      set: { ...userData, updatedAt: new Date() },
-    })
+    .onConflictDoUpdate({ target: usersTable.id, set: { ...userData, updatedAt: new Date() } })
     .returning();
   return user;
 }
 
+// ─── Phone OTP Auth ───────────────────────────────────────────────────────────
+
+router.post("/auth/phone/send-otp", async (req: Request, res: Response) => {
+  try {
+    const { phone } = SendOtpBody.parse(req.body);
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
+
+    // Invalidate any existing OTPs for this phone
+    await db
+      .update(phoneOtpsTable)
+      .set({ used: true })
+      .where(and(eq(phoneOtpsTable.phone, phone), eq(phoneOtpsTable.used, false)));
+
+    await db.insert(phoneOtpsTable).values({ phone, otp, expiresAt });
+
+    // In production, send SMS via provider. For demo, return OTP in response.
+    res.json({ success: true, demo_otp: otp, message: "OTP sent (demo mode)" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to send OTP");
+    res.status(400).json({ error: "Invalid phone number" });
+  }
+});
+
+router.post("/auth/phone/verify-otp", async (req: Request, res: Response) => {
+  try {
+    const { phone, otp } = VerifyOtpBody.parse(req.body);
+
+    const [otpRecord] = await db
+      .select()
+      .from(phoneOtpsTable)
+      .where(
+        and(
+          eq(phoneOtpsTable.phone, phone),
+          eq(phoneOtpsTable.used, false),
+          gt(phoneOtpsTable.expiresAt, new Date()),
+        ),
+      )
+      .orderBy(phoneOtpsTable.createdAt)
+      .limit(1);
+
+    if (!otpRecord) {
+      res.status(400).json({ error: "OTP expired or not found. Please request a new OTP." });
+      return;
+    }
+
+    if (otpRecord.attempts >= MAX_OTP_ATTEMPTS) {
+      await db.update(phoneOtpsTable).set({ used: true }).where(eq(phoneOtpsTable.id, otpRecord.id));
+      res.status(400).json({ error: "Too many attempts. Please request a new OTP." });
+      return;
+    }
+
+    if (otpRecord.otp !== otp) {
+      await db
+        .update(phoneOtpsTable)
+        .set({ attempts: otpRecord.attempts + 1 })
+        .where(eq(phoneOtpsTable.id, otpRecord.id));
+      res.status(400).json({ error: "Invalid OTP" });
+      return;
+    }
+
+    // Mark OTP as used
+    await db.update(phoneOtpsTable).set({ used: true }).where(eq(phoneOtpsTable.id, otpRecord.id));
+
+    // Find or create user by phone
+    const [existingUser] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.phone, phone))
+      .limit(1);
+
+    let user = existingUser;
+    if (!user) {
+      const [created] = await db
+        .insert(usersTable)
+        .values({ phone, firstName: null, lastName: null, email: null })
+        .returning();
+      user = created;
+    }
+
+    const sessionData: SessionData = {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      },
+      access_token: `phone_auth_${user.id}`,
+      refresh_token: undefined,
+      expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    };
+
+    const sid = await createSession(sessionData);
+    setSessionCookie(res, sid);
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to verify OTP");
+    res.status(400).json({ error: "Verification failed" });
+  }
+});
+
+// ─── Session / User ───────────────────────────────────────────────────────────
+
 router.get("/auth/user", (req: Request, res: Response) => {
   res.json(
-    GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
-    }),
+    GetCurrentAuthUserResponse.parse({ user: req.isAuthenticated() ? req.user : null }),
   );
 });
+
+router.post("/auth/logout", async (req: Request, res: Response) => {
+  const sid = getSessionId(req);
+  await clearSession(res, sid);
+  res.json({ success: true });
+});
+
+// ─── OIDC (Replit Auth - kept for backward compatibility) ────────────────────
 
 router.get("/login", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
@@ -180,74 +282,25 @@ router.get("/callback", async (req: Request, res: Response) => {
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
-  const origin = getOrigin(req);
   const sid = getSessionId(req);
   await clearSession(res, sid);
-
-  const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
-    post_logout_redirect_uri: origin,
-  });
-  res.redirect(endSessionUrl.href);
-});
-
-router.post("/mobile-auth/token-exchange", async (req: Request, res: Response) => {
-  const parsed = ExchangeMobileAuthorizationCodeBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Missing or invalid required parameters" });
-    return;
-  }
-
-  const { code, code_verifier, redirect_uri, state, nonce } = parsed.data;
-
   try {
     const config = await getOidcConfig();
-    const callbackUrl = new URL(redirect_uri);
-    callbackUrl.searchParams.set("code", code);
-    callbackUrl.searchParams.set("state", state);
-    callbackUrl.searchParams.set("iss", ISSUER_URL);
-
-    const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
-      pkceCodeVerifier: code_verifier,
-      expectedNonce: nonce ?? undefined,
-      expectedState: state,
-      idTokenExpected: true,
+    const origin = getOrigin(req);
+    const endSessionUrl = oidc.buildEndSessionUrl(config, {
+      client_id: process.env.REPL_ID!,
+      post_logout_redirect_uri: origin,
     });
-
-    const claims = tokens.claims();
-    if (!claims) {
-      res.status(401).json({ error: "No claims in ID token" });
-      return;
-    }
-
-    const dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
-    const now = Math.floor(Date.now() / 1000);
-    const sessionData: SessionData = {
-      user: {
-        id: dbUser.id,
-        email: dbUser.email,
-        firstName: dbUser.firstName,
-        lastName: dbUser.lastName,
-        profileImageUrl: dbUser.profileImageUrl,
-      },
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
-    };
-
-    const sid = await createSession(sessionData);
-    res.json(ExchangeMobileAuthorizationCodeResponse.parse({ token: sid }));
-  } catch (err) {
-    req.log.error({ err }, "Mobile token exchange error");
-    res.status(500).json({ error: "Token exchange failed" });
+    res.redirect(endSessionUrl.href);
+  } catch {
+    res.redirect("/");
   }
 });
 
 router.post("/mobile-auth/logout", async (req: Request, res: Response) => {
   const sid = getSessionId(req);
   if (sid) await deleteSession(sid);
-  res.json(LogoutMobileSessionResponse.parse({ success: true }));
+  res.json({ success: true });
 });
 
 export default router;
