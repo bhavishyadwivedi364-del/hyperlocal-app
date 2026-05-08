@@ -1,0 +1,87 @@
+Create a modern AI-powered hyperlocal super app for Tier-2 and Tier-3 cities in India.
+
+The app should work for both customers and sellers in a single platform with role-based login.
+
+Tech Stack:
+- React + Next.js frontend
+- Node.js + Express backend
+- Firebase Authentication with OTP login
+- Firestore database
+- Tailwind CSS
+- Responsive for mobile and desktop
+- Dark mode and light mode
+- Multi-language support (English and Hindi initially)
+
+Main Features:
+
+1. Customer Features
+- OTP login with phone number
+- Home page with categories
+- Search nearby shops and services
+- Categories:
+  - Grocery
+  - Medicines
+  - Restaurants
+  - Electronics
+  - Furniture
+  - Taxi booking
+  - Vegetables
+  - General stores
+- Product listing with images, prices, ratings
+- Add to cart
+- Online payment integration placeholder
+- Cash on delivery option
+- Order tracking
+- AI assistant chatbot for customer support
+- Feedback form
+- Contact us page
+- User profile and order history
+
+2. Seller Features
+- Seller dashboard
+- Add/edit/delete products
+- Inventory management
+- Order management
+- Earnings dashboard
+- Download reports in Excel/CSV format
+- Shop profile management
+
+3. Admin Panel
+- Approve sellers
+- Manage users
+- Manage products and orders
+- Analytics dashboard
+- Complaint management
+- Revenue tracking
+- Feedback management
+
+UI Requirements:
+- Professional modern UI
+- Similar feel to Amazon/Flipkart/Swiggy
+- Clean cards and animations
+- Bottom navigation for mobile
+- Sidebar for admin
+- Dark/light theme toggle
+- Simple UI for non-technical users
+
+AI Features:
+- AI chatbot assistant
+- Smart product search
+- Voice-ready structure
+- Personalized recommendations placeholder
+
+Generate:
+- Full folder structure
+- Frontend pages
+- Backend APIs
+- Firebase integration structure
+- Example database schema
+- Dummy sample data
+- Responsive dashboard layouts
+
+Start with a working MVP focused on:
+- Grocery
+- Medicines
+- Restaurants
+
+Include comments in code for future scalability.
