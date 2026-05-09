@@ -4,10 +4,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
-import { ShoppingBag, Store, ChevronRight, Phone, KeyRound } from "lucide-react";
+import { ShoppingBag, Store, ChevronRight, Phone, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 
 type Step = "phone" | "otp" | "role";
 type Role = "customer" | "seller";
+
+// ─── Indian phone validation & normalization ──────────────────────────────────
+
+interface PhoneResult {
+  valid: boolean;
+  normalized?: string;   // "+91XXXXXXXXXX"
+  digits?: string;       // "XXXXXXXXXX"
+  error?: string;
+}
+
+function validateIndianPhone(raw: string): PhoneResult {
+  // Strip all spaces, dashes, dots, parentheses
+  const cleaned = raw.replace(/[\s\-\.\(\)]/g, "");
+
+  if (!cleaned) return { valid: false, error: "Please enter your mobile number" };
+
+  // Reject if it contains any non-digit characters (except a leading +)
+  if (!/^\+?\d+$/.test(cleaned)) {
+    return { valid: false, error: "Mobile number must contain digits only" };
+  }
+
+  let digits = cleaned;
+
+  // Strip +91 prefix
+  if (digits.startsWith("+91")) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith("91") && digits.length === 12) {
+    // 91XXXXXXXXXX — only strip country code when total length is exactly 12
+    digits = digits.slice(2);
+  }
+
+  // Must now be exactly 10 digits
+  if (digits.length !== 10) {
+    if (digits.length < 10) {
+      return { valid: false, error: `Number too short — enter a 10-digit mobile number` };
+    }
+    return { valid: false, error: `Number too long — enter a 10-digit mobile number` };
+  }
+
+  // Indian mobile numbers start with 6, 7, 8 or 9
+  if (!/^[6-9]/.test(digits)) {
+    return { valid: false, error: "Indian mobile numbers start with 6, 7, 8 or 9" };
+  }
+
+  return { valid: true, normalized: `+91${digits}`, digits };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function Login() {
   const { t, lang, setLang } = useI18n();
@@ -15,11 +63,22 @@ export function Login() {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("");          // raw user input
+  const [normalizedPhone, setNormalizedPhone] = useState(""); // +91XXXXXXXXXX
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
   const [otp, setOtp] = useState("");
   const [demoOtp, setDemoOtp] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  // Real-time validation as the user types (only after first touch)
+  useEffect(() => {
+    if (!phoneTouched) return;
+    const result = validateIndianPhone(phone);
+    setPhoneError(result.valid ? null : (result.error ?? null));
+  }, [phone, phoneTouched]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -28,18 +87,28 @@ export function Login() {
     }
   }, [countdown]);
 
+  // Derived: is the current phone input valid?
+  const phoneValidation = validateIndianPhone(phone);
+  const phoneIsValid = phoneValidation.valid;
+
   async function sendOtp() {
-    const clean = phone.replace(/\s/g, "");
-    if (clean.length < 10) {
-      toast({ title: "Please enter a valid phone number", variant: "destructive" });
+    setPhoneTouched(true);
+    const result = validateIndianPhone(phone);
+    if (!result.valid) {
+      setPhoneError(result.error ?? "Invalid phone number");
       return;
     }
+
+    const normalized = result.normalized!;
+    setNormalizedPhone(normalized);
+    setPhoneError(null);
     setLoading(true);
+
     try {
       const res = await fetch("/api/auth/phone/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: clean }),
+        body: JSON.stringify({ phone: normalized }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -60,22 +129,19 @@ export function Login() {
       const res = await fetch("/api/auth/phone/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.replace(/\s/g, ""), otp }),
+        body: JSON.stringify({ phone: normalizedPhone, otp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Check the user's profile — if they already have a role (including admin), skip role selection
       const profileRes = await fetch("/api/users/profile");
       if (profileRes.ok) {
         const profile = await profileRes.json();
-        // Admin and seller roles are already set — go straight to the app
         if (profile.role && profile.role !== "customer") {
           queryClient.invalidateQueries();
           window.location.reload();
           return;
         }
-        // New user with no meaningful role yet → let them choose customer or seller
         setStep("role");
         return;
       }
@@ -146,31 +212,91 @@ export function Login() {
 
           {/* Card */}
           <div className="bg-white rounded-2xl shadow-xl p-6">
+
+            {/* ── Phone step ── */}
             {step === "phone" && (
               <>
                 <h2 className="text-lg font-bold mb-1">{t("enterPhone")}</h2>
-                <p className="text-sm text-muted-foreground mb-4">We'll send you a one-time password</p>
-                <div className="relative mb-4">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="tel"
-                    placeholder={t("phonePlaceholder")}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pl-10 h-12 text-base"
-                    onKeyDown={(e) => e.key === "Enter" && sendOtp()}
-                  />
+                <p className="text-sm text-muted-foreground mb-4">
+                  We'll send you a one-time password
+                </p>
+
+                {/* Input with live validation indicator */}
+                <div className="mb-1">
+                  <div className="relative">
+                    {/* Country code badge */}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground select-none pointer-events-none flex items-center gap-1">
+                      <Phone className="h-4 w-4" />
+                      <span>+91</span>
+                    </span>
+                    <Input
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="98765 43210"
+                      value={phone}
+                      onChange={(e) => {
+                        // Allow digits, spaces, +, - only
+                        const raw = e.target.value.replace(/[^\d\s\+\-\.]/g, "");
+                        setPhone(raw);
+                      }}
+                      onBlur={() => setPhoneTouched(true)}
+                      className={`pl-16 pr-10 h-12 text-base font-mono tracking-wide transition-colors ${
+                        phoneTouched && phoneIsValid
+                          ? "border-green-400 focus-visible:ring-green-300"
+                          : phoneTouched && phoneError
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      onKeyDown={(e) => e.key === "Enter" && sendOtp()}
+                    />
+                    {/* Validation icon */}
+                    {phoneTouched && phone.length > 0 && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {phoneIsValid ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Error / hint text */}
+                  <div className="mt-1.5 min-h-[18px]">
+                    {phoneTouched && phoneError ? (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
+                        {phoneError}
+                      </p>
+                    ) : phoneTouched && phoneIsValid ? (
+                      <p className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 shrink-0" />
+                        Looks good — {phoneValidation.normalized}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Enter 10-digit mobile number (e.g. 9876543210)
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <Button onClick={sendOtp} disabled={loading} className="w-full h-12 text-base font-semibold">
+
+                <Button
+                  onClick={sendOtp}
+                  disabled={loading}
+                  className="w-full h-12 text-base font-semibold mt-3"
+                >
                   {loading ? "Sending..." : t("sendOtp")}
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
+
                 <p className="text-xs text-muted-foreground mt-4 text-center">
                   By continuing, you agree to our Terms of Service
                 </p>
               </>
             )}
 
+            {/* ── OTP step ── */}
             {step === "otp" && (
               <>
                 <button
@@ -180,12 +306,19 @@ export function Login() {
                   ← Change number
                 </button>
                 <h2 className="text-lg font-bold mb-1">{t("enterOtp")}</h2>
-                <p className="text-sm text-muted-foreground mb-1">Sent to {phone}</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Sent to{" "}
+                  <span className="font-medium text-foreground font-mono">
+                    {normalizedPhone}
+                  </span>
+                </p>
 
                 {demoOtp && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 flex items-center gap-2">
                     <span className="text-xs text-amber-700 font-medium">Demo OTP:</span>
-                    <span className="text-lg font-mono font-bold text-amber-800 tracking-widest">{demoOtp}</span>
+                    <span className="text-lg font-mono font-bold text-amber-800 tracking-widest">
+                      {demoOtp}
+                    </span>
                   </div>
                 )}
 
@@ -199,8 +332,10 @@ export function Login() {
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     className="pl-10 h-12 text-xl font-mono tracking-widest text-center"
                     onKeyDown={(e) => e.key === "Enter" && otp.length === 6 && verifyOtp()}
+                    autoFocus
                   />
                 </div>
+
                 <Button
                   onClick={verifyOtp}
                   disabled={loading || otp.length !== 6}
@@ -208,9 +343,12 @@ export function Login() {
                 >
                   {loading ? "Verifying..." : t("verifyOtp")}
                 </Button>
+
                 <div className="mt-3 text-center">
                   {countdown > 0 ? (
-                    <span className="text-sm text-muted-foreground">Resend OTP in {countdown}s</span>
+                    <span className="text-sm text-muted-foreground">
+                      Resend OTP in {countdown}s
+                    </span>
                   ) : (
                     <button
                       onClick={sendOtp}
@@ -224,10 +362,13 @@ export function Login() {
               </>
             )}
 
+            {/* ── Role step ── */}
             {step === "role" && (
               <>
                 <h2 className="text-lg font-bold mb-1">{t("selectRole")}</h2>
-                <p className="text-sm text-muted-foreground mb-4">Choose how you'll use NearKart</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Choose how you'll use NearKart
+                </p>
                 <div className="space-y-3">
                   {roleOptions.map((opt) => {
                     const Icon = opt.icon;

@@ -17,8 +17,25 @@ import {
   type SessionData,
 } from "../lib/auth";
 
-const SendOtpBody = z.object({ phone: z.string().min(10).max(15) });
-const VerifyOtpBody = z.object({ phone: z.string(), otp: z.string().length(6) });
+// ─── Phone validation helpers ────────────────────────────────────────────────
+
+/**
+ * Normalize an Indian mobile number to +91XXXXXXXXXX.
+ * Accepts: 8269352413  |  +918269352413  |  918269352413
+ * Rejects: anything that doesn't resolve to a 10-digit number starting with 6-9.
+ */
+function normalizeIndianPhone(raw: string): string | null {
+  const cleaned = raw.replace(/[\s\-\.\(\)]/g, "");
+  if (!/^\+?\d+$/.test(cleaned)) return null;
+
+  let digits = cleaned;
+  if (digits.startsWith("+91")) digits = digits.slice(3);
+  else if (digits.startsWith("91") && digits.length === 12) digits = digits.slice(2);
+
+  if (!/^[6-9]\d{9}$/.test(digits)) return null;
+  return `+91${digits}`;
+}
+
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -119,8 +136,16 @@ async function upsertUser(claims: Record<string, unknown>) {
 // ─── Phone OTP Auth ───────────────────────────────────────────────────────────
 
 router.post("/auth/phone/send-otp", otpRateLimiter, async (req: Request, res: Response) => {
+  // Validate & normalize phone before anything else
+  const rawPhone = req.body?.phone;
+  const phone = normalizeIndianPhone(String(rawPhone ?? ""));
+  if (!phone) {
+    return res.status(400).json({
+      error: "Invalid mobile number. Enter a 10-digit Indian number starting with 6–9 (e.g. 9876543210 or +919876543210).",
+    });
+  }
+
   try {
-    const { phone } = SendOtpBody.parse(req.body);
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
@@ -136,13 +161,24 @@ router.post("/auth/phone/send-otp", otpRateLimiter, async (req: Request, res: Re
     res.json({ success: true, demo_otp: otp, message: "OTP sent (demo mode)" });
   } catch (err) {
     req.log.error({ err }, "Failed to send OTP");
-    res.status(400).json({ error: "Invalid phone number" });
+    res.status(500).json({ error: "Failed to send OTP. Please try again." });
   }
 });
 
 router.post("/auth/phone/verify-otp", async (req: Request, res: Response) => {
+  // Validate & normalize phone
+  const rawPhone = req.body?.phone;
+  const phone = normalizeIndianPhone(String(rawPhone ?? ""));
+  if (!phone) {
+    return res.status(400).json({ error: "Invalid mobile number." });
+  }
+
+  const otp = String(req.body?.otp ?? "");
+  if (!/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ error: "OTP must be exactly 6 digits." });
+  }
+
   try {
-    const { phone, otp } = VerifyOtpBody.parse(req.body);
 
     const [otpRecord] = await db
       .select()
@@ -156,6 +192,8 @@ router.post("/auth/phone/verify-otp", async (req: Request, res: Response) => {
       )
       .orderBy(phoneOtpsTable.createdAt)
       .limit(1);
+
+    // (otp and phone are already validated above)
 
     if (!otpRecord) {
       res.status(400).json({ error: "OTP expired or not found. Please request a new OTP." });
