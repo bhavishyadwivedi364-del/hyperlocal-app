@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
-import { useCreateFeedback } from "@workspace/api-client-react";
+import { useSubmitFeedback } from "@workspace/api-client-react";
 import { MessageSquare, Phone, Mail, MapPin, ChevronLeft, CheckCircle2, Bot } from "lucide-react";
 import { Link } from "wouter";
 
@@ -26,7 +26,7 @@ export function ContactPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiChat, setAiChat] = useState<{ role: "user" | "ai"; text: string }[]>([]);
 
-  const { mutate: createFeedback, isPending } = useCreateFeedback({
+  const { mutate: createFeedback, isPending } = useSubmitFeedback({
     mutation: {
       onSuccess: () => {
         setSubmitted(true);
