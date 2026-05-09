@@ -16,9 +16,12 @@
     "cors": "^2",
     "drizzle-orm": "catalog:",
     "express": "^5",
+    "express-rate-limit": "^8.5.1",
+    "helmet": "^8.1.0",
     "openid-client": "^6.8.4",
     "pino": "^9",
     "pino-http": "^10",
+    "razorpay": "^2.9.6",
     "ws": "^8.20.0",
     "zod": "catalog:"
   },

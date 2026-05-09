@@ -4,8 +4,8 @@ export type Lang = "en" | "hi";
 
 const translations: Record<Lang, Record<string, string>> = {
   en: {
-    appName: "HyperLocal",
-    tagline: "Your neighborhood marketplace",
+    appName: "NearKart",
+    tagline: "Your neighborhood kart",
     login: "Login",
     logout: "Logout",
     enterPhone: "Enter your phone number",
@@ -15,7 +15,7 @@ const translations: Record<Lang, Record<string, string>> = {
     otpPlaceholder: "6-digit OTP",
     verifyOtp: "Verify OTP",
     resendOtp: "Resend OTP",
-    selectRole: "How will you use HyperLocal?",
+    selectRole: "How will you use NearKart?",
     iAmCustomer: "I want to shop",
     iAmSeller: "I want to sell",
     iAmAdmin: "I am an admin",
@@ -119,10 +119,15 @@ const translations: Record<Lang, Record<string, string>> = {
     totalOrders: "Total Orders",
     totalRevenue: "Total Revenue",
     totalProducts: "Total Products",
+    kycVerification: "KYC Verification",
+    kycSubmit: "Submit KYC",
+    kycPending: "KYC under review",
+    kycApproved: "KYC Verified",
+    kycRejected: "KYC Rejected",
   },
   hi: {
-    appName: "हाइपरलोकल",
-    tagline: "आपका नजदीकी बाजार",
+    appName: "NearKart",
+    tagline: "आपका नजदीकी कार्ट",
     login: "लॉगिन",
     logout: "लॉगआउट",
     enterPhone: "अपना फोन नंबर दर्ज करें",
@@ -132,7 +137,7 @@ const translations: Record<Lang, Record<string, string>> = {
     otpPlaceholder: "6 अंकों का OTP",
     verifyOtp: "OTP सत्यापित करें",
     resendOtp: "OTP दोबारा भेजें",
-    selectRole: "आप HyperLocal का उपयोग कैसे करेंगे?",
+    selectRole: "आप NearKart का उपयोग कैसे करेंगे?",
     iAmCustomer: "मैं खरीदारी करना चाहता हूं",
     iAmSeller: "मैं बेचना चाहता हूं",
     iAmAdmin: "मैं एडमिन हूं",
@@ -236,6 +241,11 @@ const translations: Record<Lang, Record<string, string>> = {
     totalOrders: "कुल ऑर्डर",
     totalRevenue: "कुल राजस्व",
     totalProducts: "कुल उत्पाद",
+    kycVerification: "KYC सत्यापन",
+    kycSubmit: "KYC जमा करें",
+    kycPending: "KYC समीक्षा में",
+    kycApproved: "KYC सत्यापित",
+    kycRejected: "KYC अस्वीकृत",
   },
 };
 
@@ -253,13 +263,13 @@ const I18nContext = createContext<I18nContextType>({
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    const saved = localStorage.getItem("hl_lang");
+    const saved = localStorage.getItem("nk_lang");
     return (saved as Lang) || "en";
   });
 
   const setLang = (l: Lang) => {
     setLangState(l);
-    localStorage.setItem("hl_lang", l);
+    localStorage.setItem("nk_lang", l);
   };
 
   const t = (key: string): string => {

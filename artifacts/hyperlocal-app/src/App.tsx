@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetUserProfile } from "@workspace/api-client-react";
+import { useEffect, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 import { I18nProvider } from "@/lib/i18n";
 import { MainLayout } from "./components/layout";
@@ -27,11 +29,13 @@ import { SellerDashboard } from "@/pages/seller/dashboard";
 import { SellerProducts } from "@/pages/seller/products";
 import { SellerOrders } from "@/pages/seller/orders";
 import { SellerShopProfile } from "@/pages/seller/shop-profile";
+import { SellerKycPage } from "@/pages/seller/kyc";
 import { AdminDashboard } from "@/pages/admin/dashboard";
 import { AdminSellers } from "@/pages/admin/sellers";
 import { AdminUsers } from "@/pages/admin/users";
 import { AdminOrders } from "@/pages/admin/orders";
 import { AdminFeedback } from "@/pages/admin/feedback";
+import { AdminKycPage } from "@/pages/admin/kyc";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +45,54 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Global WebSocket notification listener — shows toast for order status updates
+function GlobalOrderNotifications({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const { toast } = useToast();
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let stopped = false;
+
+    function connect() {
+      if (stopped) return;
+      const proto = window.location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${window.location.host}/api/ws`);
+      wsRef.current = ws;
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "order_status_update") {
+            toast({
+              title: "Order Update",
+              description: `Order #${msg.orderId} is now ${msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}`,
+            });
+          }
+        } catch {}
+      };
+
+      ws.onclose = () => {
+        if (!stopped) {
+          reconnectTimer.current = setTimeout(connect, 5000);
+        }
+      };
+    }
+
+    connect();
+
+    return () => {
+      stopped = true;
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [isAuthenticated, toast]);
+
+  return null;
+}
 
 function Router() {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
@@ -54,7 +106,7 @@ function Router() {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <span className="text-primary-foreground font-bold text-xl">H</span>
+            <span className="text-primary-foreground font-bold text-xl">N</span>
           </div>
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
@@ -74,51 +126,62 @@ function Router() {
 
   if (role === "admin") {
     return (
-      <AdminLayout>
-        <Switch>
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/admin/sellers" component={AdminSellers} />
-          <Route path="/admin/users" component={AdminUsers} />
-          <Route path="/admin/orders" component={AdminOrders} />
-          <Route path="/admin/feedback" component={AdminFeedback} />
-          <Route path="*" component={() => <AdminDashboard />} />
-        </Switch>
-      </AdminLayout>
+      <>
+        <GlobalOrderNotifications isAuthenticated={isAuthenticated} />
+        <AdminLayout>
+          <Switch>
+            <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin/sellers" component={AdminSellers} />
+            <Route path="/admin/users" component={AdminUsers} />
+            <Route path="/admin/orders" component={AdminOrders} />
+            <Route path="/admin/feedback" component={AdminFeedback} />
+            <Route path="/admin/kyc" component={AdminKycPage} />
+            <Route path="*" component={() => <AdminDashboard />} />
+          </Switch>
+        </AdminLayout>
+      </>
     );
   }
 
   if (role === "seller") {
     return (
-      <SellerLayout>
-        <Switch>
-          <Route path="/seller" component={SellerDashboard} />
-          <Route path="/seller/products" component={SellerProducts} />
-          <Route path="/seller/orders" component={SellerOrders} />
-          <Route path="/seller/shop" component={SellerShopProfile} />
-          <Route path="*" component={() => <SellerDashboard />} />
-        </Switch>
-      </SellerLayout>
+      <>
+        <GlobalOrderNotifications isAuthenticated={isAuthenticated} />
+        <SellerLayout>
+          <Switch>
+            <Route path="/seller" component={SellerDashboard} />
+            <Route path="/seller/products" component={SellerProducts} />
+            <Route path="/seller/orders" component={SellerOrders} />
+            <Route path="/seller/shop" component={SellerShopProfile} />
+            <Route path="/seller/kyc" component={SellerKycPage} />
+            <Route path="*" component={() => <SellerDashboard />} />
+          </Switch>
+        </SellerLayout>
+      </>
     );
   }
 
   return (
-    <MainLayout>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/category/:slug" component={CategoryPage} />
-        <Route path="/shops" component={ShopsPage} />
-        <Route path="/shop/:id" component={ShopDetailPage} />
-        <Route path="/product/:id" component={ProductDetailPage} />
-        <Route path="/cart" component={CartPage} />
-        <Route path="/checkout" component={CheckoutPage} />
-        <Route path="/orders" component={OrdersPage} />
-        <Route path="/order/:id" component={OrderDetailPage} />
-        <Route path="/profile" component={ProfilePage} />
-        <Route path="/contact" component={ContactPage} />
-        <Route path="/nearby" component={NearbyShopsPage} />
-        <Route component={NotFound} />
-      </Switch>
-    </MainLayout>
+    <>
+      <GlobalOrderNotifications isAuthenticated={isAuthenticated} />
+      <MainLayout>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/category/:slug" component={CategoryPage} />
+          <Route path="/shops" component={ShopsPage} />
+          <Route path="/shop/:id" component={ShopDetailPage} />
+          <Route path="/product/:id" component={ProductDetailPage} />
+          <Route path="/cart" component={CartPage} />
+          <Route path="/checkout" component={CheckoutPage} />
+          <Route path="/orders" component={OrdersPage} />
+          <Route path="/order/:id" component={OrderDetailPage} />
+          <Route path="/profile" component={ProfilePage} />
+          <Route path="/contact" component={ContactPage} />
+          <Route path="/nearby" component={NearbyShopsPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </MainLayout>
+    </>
   );
 }
 

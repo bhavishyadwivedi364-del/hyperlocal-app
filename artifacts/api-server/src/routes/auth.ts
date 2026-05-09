@@ -4,6 +4,7 @@ import { GetCurrentAuthUserResponse } from "@workspace/api-zod";
 import { z } from "zod";
 import { db, usersTable, phoneOtpsTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
+import { otpRateLimiter } from "../middlewares/rateLimiter";
 import {
   clearSession,
   getOidcConfig,
@@ -78,7 +79,7 @@ async function upsertUser(claims: Record<string, unknown>) {
 
 // ─── Phone OTP Auth ───────────────────────────────────────────────────────────
 
-router.post("/auth/phone/send-otp", async (req: Request, res: Response) => {
+router.post("/auth/phone/send-otp", otpRateLimiter, async (req: Request, res: Response) => {
   try {
     const { phone } = SendOtpBody.parse(req.body);
     const otp = generateOtp();

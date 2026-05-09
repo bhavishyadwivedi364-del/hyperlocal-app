@@ -50,3 +50,24 @@ export const phoneOtpsTable = pgTable("phone_otps", {
 });
 
 export type PhoneOtp = typeof phoneOtpsTable.$inferSelect;
+
+// KYC Verification — required for sellers before they can go live
+export const kycVerificationsTable = pgTable("kyc_verifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  documentType: varchar("document_type", { length: 20 }).notNull(), // "aadhaar" | "pan" | "shop_license"
+  documentImageUrl: varchar("document_image_url", { length: 500 }).notNull(),
+  documentNumber: varchar("document_number", { length: 50 }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // "pending" | "approved" | "rejected"
+  adminNotes: varchar("admin_notes", { length: 500 }),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type KycVerification = typeof kycVerificationsTable.$inferSelect;

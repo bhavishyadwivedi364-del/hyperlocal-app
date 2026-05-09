@@ -1,0 +1,438 @@
+You are a senior full-stack architect and principal software engineer.
+
+Continue building my production-grade hyperlocal marketplace platform from the CURRENT existing project state without rewriting the whole project.
+
+IMPORTANT:
+- Preserve existing UI and current pages.
+- Improve architecture incrementally.
+- Never break existing flows.
+- Continue from current implementation.
+- Use clean scalable production architecture.
+- Use modular reusable code.
+
+PROJECT OVERVIEW:
+This is a hyperlocal marketplace platform similar to Blinkit + Meesho + Shopify Seller + Rapido local commerce.
+
+STACK:
+Frontend:
+- Next.js 16 App Router
+- TypeScript
+- TailwindCSS
+
+Backend:
+- Node.js
+- Express.js
+- Prisma ORM
+- PostgreSQL
+
+Authentication:
+- Firebase OTP Authentication
+
+Hosting Environment:
+- Replit only
+
+DATABASE:
+Use PostgreSQL with Prisma.
+
+CURRENT FEATURES ALREADY EXIST:
+- Customer app UI
+- Seller dashboard UI
+- Admin dashboard UI
+- OTP login screens
+- Product listing UI
+- Cart UI
+- Nearby shops UI
+- Profile UI
+- Feedback UI
+- CSV export UI
+- Multi-language UI
+- Seller registration UI
+
+CURRENT PROBLEMS TO FIX:
+1. Forms submit but data is not saved.
+2. Product add/create fails.
+3. Shop registration fails.
+4. Feedback submission fails.
+5. Cart add fails.
+6. Nearby shops map missing.
+7. OTP is demo-only.
+8. No proper admin authentication.
+9. No seller verification/KYC.
+10. No real image upload system.
+11. APIs incomplete.
+12. Database relations incomplete.
+13. Role-based access missing.
+14. No production validation.
+15. No persistent authentication.
+
+CRITICAL REQUIREMENTS:
+
+===================================
+1. AUTHENTICATION SYSTEM
+===================================
+
+Implement REAL Firebase OTP authentication.
+
+Requirements:
+- Real OTP sent to actual phone number.
+- Persistent login sessions.
+- Logout functionality.
+- Protected routes.
+- JWT/session validation middleware.
+- Firebase Admin SDK verification on backend.
+
+Roles:
+- USER
+- SELLER
+- ADMIN
+
+Make these admins:
+Phone:
+8269352413
+
+Email:
+bhavishyadwivedi786@gmail.com
+
+Admin privileges:
+- View all users
+- Approve/reject sellers
+- Manage shops
+- Delete products
+- Suspend users
+- Review complaints
+- View analytics
+
+===================================
+2. SELLER VERIFICATION SYSTEM
+===================================
+
+Implement mandatory KYC verification for sellers.
+
+Required documents:
+- Aadhaar card OR
+- PAN card OR
+- Shop license
+
+Requirements:
+- Image upload support
+- OCR text extraction
+- AI fake/real verification logic
+- Manual admin approval flow
+- Store verification status
+
+Seller states:
+- PENDING
+- VERIFIED
+- REJECTED
+
+Seller cannot sell until verified.
+
+===================================
+3. IMAGE UPLOAD SYSTEM
+===================================
+
+Implement production image upload system.
+
+Requirements:
+- Use Cloudinary
+- Multiple image upload
+- Compression
+- Preview
+- Delete image
+- Upload progress
+- Product images
+- Shop images
+- KYC document images
+
+===================================
+4. PRODUCT SYSTEM
+===================================
+
+Fix full product CRUD.
+
+Requirements:
+- Add product
+- Edit product
+- Delete product
+- Product categories
+- Product stock
+- Product images
+- Product variants
+- Search products
+- Pagination
+- Filters
+- Product ratings
+- Product reviews
+
+Fix current “Failed to add product” issue.
+
+===================================
+5. SHOP SYSTEM
+===================================
+
+Fix seller shop creation.
+
+Requirements:
+- Save to database correctly
+- Shop status
+- Shop categories
+- Shop timing
+- Delivery settings
+- GST number
+- Geo coordinates
+- Shop approval by admin
+
+Fix current “Failed to create shop” issue.
+
+===================================
+6. NEARBY SHOPS + MAPS
+===================================
+
+Integrate Google Maps API.
+
+Requirements:
+- Real map
+- Current location detection
+- Nearby shops within radius
+- Radius filters
+- Latitude/longitude storage
+- Distance calculation
+- Shop markers
+- Delivery zones
+
+===================================
+7. CART + ORDER SYSTEM
+===================================
+
+Implement full order flow.
+
+Requirements:
+- Add to cart
+- Remove from cart
+- Quantity update
+- Checkout
+- Address management
+- Place order
+- Order tracking
+- Seller order dashboard
+- Admin order dashboard
+
+Order statuses:
+- PENDING
+- ACCEPTED
+- PACKED
+- OUT_FOR_DELIVERY
+- DELIVERED
+- CANCELLED
+
+===================================
+8. PAYMENT SYSTEM
+===================================
+
+Integrate Razorpay.
+
+Requirements:
+- UPI
+- Cards
+- Net banking
+- COD
+- Payment verification
+- Refund support
+
+===================================
+9. FEEDBACK + COMPLAINT SYSTEM
+===================================
+
+Fix feedback form.
+
+Requirements:
+- Save feedback in database
+- Product review
+- Shop review
+- Complaint categories
+- Admin complaint panel
+- Rating analytics
+
+Fix current “Failed to submit” issue.
+
+===================================
+10. DATABASE ARCHITECTURE
+===================================
+
+Create proper Prisma schema.
+
+Required models:
+- User
+- SellerProfile
+- Shop
+- Product
+- ProductImage
+- Category
+- Cart
+- CartItem
+- Order
+- OrderItem
+- Review
+- Complaint
+- Feedback
+- Address
+- OTPVerification
+- KYCVerification
+- AdminLog
+
+Use:
+- Proper relations
+- Cascading
+- Indexes
+- Optimized queries
+
+===================================
+11. API ARCHITECTURE
+===================================
+
+Create scalable backend structure.
+
+Structure:
+src/
+  controllers/
+  routes/
+  middleware/
+  services/
+  validators/
+  utils/
+  config/
+
+Requirements:
+- REST APIs
+- Validation middleware
+- Error handling
+- JWT verification
+- Logging
+- Rate limiting
+- Secure APIs
+
+===================================
+12. FRONTEND IMPROVEMENTS
+===================================
+
+Improve UI professionally.
+
+Requirements:
+- Responsive mobile-first design
+- Loading states
+- Skeleton loaders
+- Toast notifications
+- Empty states
+- Error states
+- Infinite scrolling
+- Search suggestions
+- Better animations
+
+===================================
+13. MULTI-LANGUAGE
+===================================
+
+Implement proper i18n.
+
+Languages:
+- English
+- Hindi
+
+Requirements:
+- Dynamic translations
+- Persistent language preference
+
+===================================
+14. ADMIN PANEL
+===================================
+
+Build complete admin backend.
+
+Features:
+- Dashboard analytics
+- User management
+- Seller approvals
+- Complaint handling
+- Order management
+- Revenue analytics
+- CSV export
+- Shop moderation
+- Product moderation
+
+===================================
+15. PERFORMANCE + SECURITY
+===================================
+
+Requirements:
+- Input validation
+- XSS protection
+- Rate limiting
+- Helmet security
+- Secure uploads
+- Optimized queries
+- Lazy loading
+- API caching
+
+===================================
+16. IMPORTANT DEVELOPMENT RULES
+===================================
+
+- Never rewrite complete files unnecessarily.
+- Preserve existing UI.
+- Improve incrementally.
+- Always provide complete code.
+- Always mention file path.
+- Always explain where to paste code.
+- Always maintain scalability.
+- Keep code production-grade.
+- Use TypeScript everywhere.
+- Use reusable components.
+- Avoid hardcoded values.
+- Use environment variables.
+
+===================================
+17. REPLIT CONSTRAINT RULES
+===================================
+
+Because Replit has limits:
+- Work in small modular steps.
+- Avoid huge unnecessary installs.
+- Avoid extremely heavy libraries.
+- Optimize memory usage.
+- Continue from previous state.
+- Never restart architecture from scratch.
+
+===================================
+18. PROJECT BRANDING
+===================================
+
+Rename app branding from “HyperLocal” to:
+
+Preferred new name:
+“NearKart”
+
+Theme:
+- Orange + white
+- Modern Indian commerce
+- Tier-2/Tier-3 friendly
+- Fast and clean UI
+
+===================================
+19. FINAL GOAL
+===================================
+
+Build a production-grade scalable Indian hyperlocal marketplace startup platform with:
+- Customer app
+- Seller panel
+- Admin panel
+- Real authentication
+- Real database persistence
+- Real payments
+- Real maps
+- Real KYC
+- Real product management
+- Real order system
+
+Continue development from current project state.
+Do not start from scratch.
+Always provide step-by-step implementation.

@@ -11,6 +11,8 @@ import feedbackRouter from "./feedback";
 import sellerRouter from "./seller";
 import adminRouter from "./admin";
 import uploadRouter from "./upload";
+import kycRouter from "./kyc";
+import paymentsRouter from "./payments";
 
 const router: IRouter = Router();
 
@@ -26,5 +28,7 @@ router.use(feedbackRouter);
 router.use(sellerRouter);
 router.use(adminRouter);
 router.use(uploadRouter);
+router.use(kycRouter);
+router.use(paymentsRouter);
 
 export default router;

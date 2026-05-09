@@ -168,7 +168,7 @@ export function ProfilePage() {
           {t("logout")}
         </button>
 
-        <p className="text-center text-xs text-muted-foreground pb-2">HyperLocal v1.0 · Made for India</p>
+        <p className="text-center text-xs text-muted-foreground pb-2">NearKart v1.0 · Made for India</p>
       </div>
     </div>
   );

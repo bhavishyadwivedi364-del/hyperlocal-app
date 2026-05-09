@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Store, Users, ShoppingBag, MessageSquare,
+  LayoutDashboard, Store, Users, ShoppingBag, MessageSquare, FileCheck,
   LogOut, Menu, X, Download,
 } from "lucide-react";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/orders", icon: ShoppingBag, label: "Orders" },
   { href: "/admin/feedback", icon: MessageSquare, label: "Feedback" },
+  { href: "/admin/kyc", icon: FileCheck, label: "KYC Review" },
 ];
 
 const exportLinks = [
@@ -38,11 +39,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         <div className="p-5 border-b border-zinc-700">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
+              <span className="text-white font-bold text-sm">N</span>
             </div>
             <div>
               <h2 className="text-sm font-bold leading-tight">Admin Panel</h2>
-              <p className="text-[10px] text-zinc-400">HyperLocal</p>
+              <p className="text-[10px] text-zinc-400">NearKart</p>
             </div>
           </div>
         </div>

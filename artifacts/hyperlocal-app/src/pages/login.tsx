@@ -125,7 +125,7 @@ export function Login() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
-              <span className="text-4xl font-bold text-white">H</span>
+              <span className="text-4xl font-bold text-white">N</span>
             </div>
             <h1 className="text-2xl font-bold text-foreground">{t("appName")}</h1>
             <p className="text-muted-foreground text-sm mt-1">{t("tagline")}</p>
