@@ -1,0 +1,146 @@
+Continue working on my existing production-grade NearKart hyperlocal marketplace super app from the CURRENT imported GitHub project state.
+
+IMPORTANT:
+
+* Do NOT recreate the project.
+* Preserve all existing architecture, components, routes, DB schema, styling, and integrations.
+* Work incrementally and safely.
+* Fix runtime/build issues automatically.
+
+PROJECT STACK:
+
+* pnpm
+* Vite
+* TypeScript
+* React
+* Firebase
+* PostgreSQL
+* Prisma
+* Razorpay
+* WebSocket notifications
+
+MAIN APP PATH:
+artifacts/hyperlocal-app
+
+CURRENTLY IMPLEMENTED:
+
+* NearKart branding
+* Mobile-first UI
+* Seller dashboard
+* Admin dashboard
+* Nearby shops
+* Cart system
+* Checkout flow
+* Firebase integration
+* OTP flow (demo only currently)
+* Razorpay integration structure
+* KYC verification structure
+* WebSocket notifications
+* Multi-language support
+* Security middleware
+* Rate limiting
+* GitHub backup workflow
+
+CRITICAL ISSUES TO FIX NOW:
+
+1. REAL AUTHENTICATION
+
+* Replace demo OTP with real Firebase phone OTP authentication
+* Persist login sessions
+* Add logout/session handling
+* Protect private routes
+
+2. ADMIN SYSTEM
+
+* Make phone number 8269352413 a SUPER ADMIN automatically
+* Make email [bhavishyadwivedi786@gmail.com](mailto:bhavishyadwivedi786@gmail.com) an ADMIN automatically
+* Add role-based access middleware
+* Restrict admin routes properly
+
+3. FORM/API FAILURES
+   Fix all failing backend submissions:
+
+* shop creation
+* product creation
+* feedback submission
+* add to cart
+* checkout
+* profile update
+
+Add proper:
+
+* validation
+* API error handling
+* success/error toast handling
+* DB validation
+
+4. SELLER KYC VERIFICATION
+   Implement real seller verification:
+
+* Aadhaar upload
+* PAN upload
+* OCR extraction
+* fake/invalid detection
+* admin review workflow
+* seller approval/rejection
+* verification status badges
+
+5. GOOGLE MAPS + GPS
+   Add:
+
+* Google Maps integration
+* live nearby shop detection
+* radius filtering
+* distance calculations
+* current GPS location support
+
+6. AI CHATBOT
+   Implement intelligent AI assistant:
+
+* product recommendations
+* order help
+* nearby shop suggestions
+* multilingual support
+* chatbot backend integration
+
+7. IMAGE + MEDIA SYSTEM
+   Add:
+
+* Cloudinary upload integration
+* compressed image uploads
+* product image optimization
+* seller document uploads
+
+8. SEARCH + FILTERS
+   Implement advanced:
+
+* product search
+* shop search
+* category filters
+* price range filters
+* rating filters
+* in-stock filters
+* distance filters
+* sorting options
+
+9. PRODUCTION IMPROVEMENTS
+   Add:
+
+* loading skeletons
+* empty states
+* retry handling
+* analytics
+* better mobile responsiveness
+* optimized API calls
+* secure environment handling
+
+AFTER EVERY MAJOR STEP:
+
+* explain modified files
+* explain architecture changes
+* ensure app still runs with pnpm dev
+* automatically fix runtime/build issues
+
+WORK LIKE A SENIOR FULL-STACK ENGINEER.
+Do not simplify features.
+Implement production-grade solutions.

@@ -1,0 +1,273 @@
+Continue working on my EXISTING production-grade hyperlocal marketplace super app called NearKart from the CURRENT imported GitHub/Replit project state.
+
+IMPORTANT:
+
+* DO NOT recreate the project
+* DO NOT overwrite architecture
+* DO NOT remove existing features
+* Continue incrementally from current codebase
+* Automatically fix runtime/build/database issues
+* Preserve all existing UI, routes, APIs, Prisma schema, Firebase setup, dashboards, and components
+
+PROJECT PURPOSE:
+NearKart is a mobile-first Indian hyperlocal marketplace super app focused on Tier-2/Tier-3 India.
+
+CORE FEATURES:
+
+* Nearby local shops
+* Grocery ordering
+* Medicines
+* Electronics
+* Restaurant ordering
+* Delivery tracking
+* Seller onboarding
+* Admin management
+* OTP authentication
+* Multilingual UI
+* AI chatbot assistant
+* GPS-based nearby discovery
+* Razorpay payments
+* KYC seller verification
+
+CURRENT STACK:
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* Firebase
+* PostgreSQL
+* Prisma ORM
+* Express backend
+* Node.js
+* pnpm
+* WebSocket notifications
+
+CURRENT ARCHITECTURE:
+
+hyperlocal-marketplace/
+├── backend/
+│   ├── prisma/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── index.ts
+└── frontend/
+├── src/
+│   ├── app/
+│   ├── components/
+│   ├── contexts/
+│   ├── hooks/
+│   ├── lib/
+│   ├── types/
+│   └── locales/
+
+ALREADY IMPLEMENTED:
+
+* Seller dashboard UI
+* Admin dashboard UI
+* Nearby shops UI
+* Product cards
+* Shop pages
+* Cart pages
+* Checkout structure
+* OTP UI
+* Multi-language support
+* Firebase setup
+* Prisma schema
+* Product APIs
+* Export CSV features
+* Seller Central
+* Admin analytics
+* Chatbot UI
+* Mobile-first design
+* Dark mode
+* Notifications UI
+
+CRITICAL ISSUES TO FIX:
+
+1. AUTHENTICATION
+
+* Replace demo OTP with real Firebase Phone Authentication
+* Persist login sessions
+* Add logout/session handling
+* Protect authenticated routes
+* Store Firebase user data in backend DB
+
+2. ADMIN SYSTEM
+   Make these users permanent admins:
+
+* phone: 8269352413 → SUPER_ADMIN
+* email: [bhavishyadwivedi786@gmail.com](mailto:bhavishyadwivedi786@gmail.com) → ADMIN
+
+Implement:
+
+* role-based access control
+* protected admin routes
+* protected seller routes
+* JWT/session middleware
+
+3. FORM/API FAILURES
+   Currently forms submit but fail.
+
+Fix:
+
+* shop creation
+* product creation
+* cart add
+* checkout
+* feedback submission
+* profile update
+
+Add:
+
+* backend validation
+* proper Prisma handling
+* proper API error handling
+* success/error toast handling
+* frontend loading states
+
+4. HYBRID KYC VERIFICATION SYSTEM
+
+Implement production-grade seller verification.
+
+LEVEL 1 — OCR EXTRACTION
+Extract data from Aadhaar/PAN uploads:
+
+* full name
+* DOB
+* document number
+* address
+
+LEVEL 2 — AI FRAUD DETECTION
+Detect:
+
+* blurry image
+* fake template
+* edited document
+* screenshot uploads
+* cropped/tampered files
+
+Generate fraud score:
+
+* LOW
+* MEDIUM
+* HIGH
+
+LEVEL 3 — MANUAL ADMIN APPROVAL
+Admin panel must show:
+
+* uploaded document
+* OCR extracted details
+* fraud score
+* seller details
+* shop details
+
+Admin actions:
+
+* approve
+* reject
+* request re-upload
+
+SELLER SIDE:
+
+* upload Aadhaar/PAN
+* show verification status
+* allow re-upload after rejection
+
+5. GOOGLE MAPS + GPS
+   Implement:
+
+* Google Maps integration
+* Nearby shops based on GPS
+* Radius filtering
+* Distance calculation
+* Current location support
+* Map markers for shops
+
+6. AI CHATBOT
+   Implement intelligent AI assistant:
+
+* nearby shop suggestions
+* product recommendations
+* order help
+* multilingual responses
+* FAQ support
+
+7. IMAGE + MEDIA SYSTEM
+   Use Cloudinary:
+
+* product uploads
+* shop uploads
+* KYC uploads
+
+Add:
+
+* image compression
+* optimization
+* secure uploads
+* file validation
+
+8. SEARCH + FILTERS
+   Implement:
+
+* shop search
+* product search
+* category filters
+* rating filters
+* distance filters
+* price filters
+* sorting options
+
+9. DELIVERY SYSTEM
+   Implement:
+
+* delivery partner role
+* order assignment
+* live tracking structure
+* delivery status updates
+
+10. PRODUCTION IMPROVEMENTS
+    Add:
+
+* loading skeletons
+* retry handling
+* analytics
+* secure env handling
+* optimized API calls
+* responsive improvements
+* accessibility improvements
+* scalable folder organization
+
+SECURITY REQUIREMENTS:
+
+* Never expose Aadhaar/PAN fully
+* Mask sensitive numbers
+* Encrypt sensitive data
+* Admin-only KYC access
+* Validate uploads securely
+
+IMPORTANT DEVELOPMENT RULES:
+
+* Work like a senior full-stack engineer
+* Maintain TypeScript safety
+* Maintain Prisma compatibility
+* Use clean scalable architecture
+* Fix all runtime/build errors automatically
+* Keep app production-ready
+
+AFTER EVERY MAJOR IMPLEMENTATION:
+
+* Explain modified files
+* Explain backend changes
+* Explain Prisma schema changes
+* Explain frontend changes
+* Ensure app runs correctly with:
+  pnpm dev
+
+DO NOT STOP AFTER SMALL CHANGES.
+CONTINUE IMPLEMENTING COMPLETE FEATURES END-TO-END.

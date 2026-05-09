@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { HomeIcon, ShoppingBag, ShoppingCart, User, MapPin, Globe } from "lucide-react";
 import { useGetCart, useGetUserProfile } from "@workspace/api-client-react";
 import { useI18n } from "@/lib/i18n";
+import { Chatbot } from "./chatbot";
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -102,6 +103,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Floating AI Chatbot */}
+        <Chatbot />
       </main>
     </div>
   );

@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
-import { ShoppingBag, Shield, Store, ChevronRight, Phone, KeyRound } from "lucide-react";
+import { ShoppingBag, Store, ChevronRight, Phone, KeyRound } from "lucide-react";
 
 type Step = "phone" | "otp" | "role";
-type Role = "customer" | "seller" | "admin";
+type Role = "customer" | "seller";
 
 export function Login() {
   const { t, lang, setLang } = useI18n();
@@ -64,20 +64,22 @@ export function Login() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      // Check if user has a profile/role
+
+      // Check the user's profile — if they already have a role (including admin), skip role selection
       const profileRes = await fetch("/api/users/profile");
       if (profileRes.ok) {
         const profile = await profileRes.json();
-        if (!profile.role || profile.role === "customer") {
-          setStep("role");
+        // Admin and seller roles are already set — go straight to the app
+        if (profile.role && profile.role !== "customer") {
+          queryClient.invalidateQueries();
+          window.location.reload();
           return;
         }
-      } else {
+        // New user with no meaningful role yet → let them choose customer or seller
         setStep("role");
         return;
       }
-      queryClient.invalidateQueries();
-      window.location.reload();
+      setStep("role");
     } catch (e: any) {
       toast({ title: e.message || "Invalid OTP", variant: "destructive" });
     } finally {
@@ -103,9 +105,20 @@ export function Login() {
   }
 
   const roleOptions: { role: Role; icon: typeof ShoppingBag; label: string; desc: string; color: string }[] = [
-    { role: "customer", icon: ShoppingBag, label: t("iAmCustomer"), desc: "Browse shops, order groceries, medicines & food", color: "bg-orange-50 border-orange-200 text-orange-700" },
-    { role: "seller", icon: Store, label: t("iAmSeller"), desc: "Register your shop and sell to local customers", color: "bg-green-50 border-green-200 text-green-700" },
-    { role: "admin", icon: Shield, label: t("iAmAdmin"), desc: "Manage the platform, approve sellers", color: "bg-blue-50 border-blue-200 text-blue-700" },
+    {
+      role: "customer",
+      icon: ShoppingBag,
+      label: t("iAmCustomer"),
+      desc: "Browse shops, order groceries, medicines & food",
+      color: "bg-orange-50 border-orange-200 text-orange-700",
+    },
+    {
+      role: "seller",
+      icon: Store,
+      label: t("iAmSeller"),
+      desc: "Register your shop and sell to local customers",
+      color: "bg-green-50 border-green-200 text-green-700",
+    },
   ];
 
   return (
@@ -188,14 +201,22 @@ export function Login() {
                     onKeyDown={(e) => e.key === "Enter" && otp.length === 6 && verifyOtp()}
                   />
                 </div>
-                <Button onClick={verifyOtp} disabled={loading || otp.length !== 6} className="w-full h-12 text-base font-semibold">
+                <Button
+                  onClick={verifyOtp}
+                  disabled={loading || otp.length !== 6}
+                  className="w-full h-12 text-base font-semibold"
+                >
                   {loading ? "Verifying..." : t("verifyOtp")}
                 </Button>
                 <div className="mt-3 text-center">
                   {countdown > 0 ? (
                     <span className="text-sm text-muted-foreground">Resend OTP in {countdown}s</span>
                   ) : (
-                    <button onClick={sendOtp} disabled={loading} className="text-sm text-primary font-medium hover:underline">
+                    <button
+                      onClick={sendOtp}
+                      disabled={loading}
+                      className="text-sm text-primary font-medium hover:underline"
+                    >
                       {t("resendOtp")}
                     </button>
                   )}
@@ -206,7 +227,7 @@ export function Login() {
             {step === "role" && (
               <>
                 <h2 className="text-lg font-bold mb-1">{t("selectRole")}</h2>
-                <p className="text-sm text-muted-foreground mb-4">Choose your role to get started</p>
+                <p className="text-sm text-muted-foreground mb-4">Choose how you'll use NearKart</p>
                 <div className="space-y-3">
                   {roleOptions.map((opt) => {
                     const Icon = opt.icon;

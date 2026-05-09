@@ -6,8 +6,10 @@ import { z } from "zod";
 
 const router = Router();
 
+// Only allow customer/seller roles for self-service role selection
+// Admin role can ONLY be set by another admin via /admin/users/:id/role
 const SetRoleBody = z.object({
-  role: z.enum(["customer", "seller", "admin"]),
+  role: z.enum(["customer", "seller"]),
   name: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -93,6 +95,11 @@ router.post("/users/role", async (req, res) => {
   try {
     const body = SetRoleBody.parse(req.body);
     const profile = await getOrCreateProfile(req.user.id, req.user);
+
+    // Prevent downgrading an admin via this public endpoint
+    if (profile.role === "admin") {
+      return res.status(403).json({ error: "Admin role cannot be changed via this endpoint." });
+    }
 
     const updates: Partial<typeof userProfilesTable.$inferInsert> = {
       role: body.role,

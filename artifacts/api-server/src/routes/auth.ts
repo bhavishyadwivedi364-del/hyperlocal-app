@@ -2,7 +2,7 @@ import * as oidc from "openid-client";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { GetCurrentAuthUserResponse } from "@workspace/api-zod";
 import { z } from "zod";
-import { db, usersTable, phoneOtpsTable } from "@workspace/db";
+import { db, usersTable, phoneOtpsTable, userProfilesTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 import { otpRateLimiter } from "../middlewares/rateLimiter";
 import {
@@ -23,6 +23,10 @@ const VerifyOtpBody = z.object({ phone: z.string(), otp: z.string().length(6) })
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
+
+// ─── Permanent Admin Identifiers ──────────────────────────────────────────────
+const ADMIN_PHONES = new Set(["8269352413", "+918269352413", "918269352413"]);
+const ADMIN_EMAILS = new Set(["bhavishyadwivedi786@gmail.com"]);
 
 const router: IRouter = Router();
 
@@ -59,6 +63,41 @@ function getSafeReturnTo(value: unknown): string {
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * Ensures the user_profile row for this user has the correct role.
+ * Called after phone OTP verification or OIDC login.
+ */
+async function ensureAdminRole(userId: string, phone?: string | null, email?: string | null) {
+  const normalizedPhone = phone?.replace(/[\s\-\+]/g, "");
+  const isPhoneAdmin = normalizedPhone && ADMIN_PHONES.has(normalizedPhone);
+  const isEmailAdmin = email && ADMIN_EMAILS.has(email.toLowerCase());
+
+  if (!isPhoneAdmin && !isEmailAdmin) return;
+
+  // Upsert user profile with admin role
+  const [existing] = await db
+    .select()
+    .from(userProfilesTable)
+    .where(eq(userProfilesTable.replitId, userId))
+    .limit(1);
+
+  if (existing) {
+    if (existing.role !== "admin") {
+      await db
+        .update(userProfilesTable)
+        .set({ role: "admin", updatedAt: new Date() })
+        .where(eq(userProfilesTable.replitId, userId));
+    }
+  } else {
+    await db.insert(userProfilesTable).values({
+      replitId: userId,
+      phone: phone ?? null,
+      email: email ?? null,
+      role: "admin",
+    });
+  }
 }
 
 async function upsertUser(claims: Record<string, unknown>) {
@@ -156,6 +195,9 @@ router.post("/auth/phone/verify-otp", async (req: Request, res: Response) => {
         .returning();
       user = created;
     }
+
+    // Auto-promote known admins by phone
+    await ensureAdminRole(user.id, phone, user.email);
 
     const sessionData: SessionData = {
       user: {
@@ -264,6 +306,10 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   const dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
   const now = Math.floor(Date.now() / 1000);
+
+  // Auto-promote known admins by email
+  await ensureAdminRole(dbUser.id, dbUser.phone, dbUser.email);
+
   const sessionData: SessionData = {
     user: {
       id: dbUser.id,

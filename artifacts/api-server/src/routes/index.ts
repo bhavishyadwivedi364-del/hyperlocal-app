@@ -13,6 +13,7 @@ import adminRouter from "./admin";
 import uploadRouter from "./upload";
 import kycRouter from "./kyc";
 import paymentsRouter from "./payments";
+import chatRouter from "./chat";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(adminRouter);
 router.use(uploadRouter);
 router.use(kycRouter);
 router.use(paymentsRouter);
+router.use(chatRouter);
 
 export default router;

@@ -11,6 +11,9 @@ import { globalRateLimiter } from "./middlewares/rateLimiter";
 
 const app: Express = express();
 
+// Trust Replit's reverse proxy so express-rate-limit and IP detection work correctly
+app.set("trust proxy", 1);
+
 // Security headers
 app.use(
   helmet({

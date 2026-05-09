@@ -18,11 +18,24 @@ const router = Router();
 
 const UpdateUserRoleBody = z.object({ role: z.enum(["customer", "seller", "admin"]) });
 
-function requireAdmin(req: any, res: any): boolean {
+// ─── Admin guard — checks both authentication AND admin role in DB ─────────────
+async function requireAdmin(req: any, res: any): Promise<boolean> {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
+
+  const [profile] = await db
+    .select()
+    .from(userProfilesTable)
+    .where(eq(userProfilesTable.replitId, req.user.id))
+    .limit(1);
+
+  if (!profile || profile.role !== "admin") {
+    res.status(403).json({ error: "Forbidden: Admin access required" });
+    return false;
+  }
+
   return true;
 }
 
@@ -41,7 +54,7 @@ function shopToJson(s: typeof shopsTable.$inferSelect, catName?: string | null) 
 }
 
 router.get("/admin/dashboard", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const [allUsers, allShops, allOrders, allFeedback, allCategories] = await Promise.all([
       db.select().from(userProfilesTable),
@@ -61,7 +74,6 @@ router.get("/admin/dashboard", async (req, res) => {
     const todayRevenue = todayOrders.filter((o) => o.status === "delivered").reduce((sum, o) => sum + Number(o.totalAmount), 0);
     const monthRevenue = allOrders.filter((o) => o.status === "delivered" && o.createdAt >= startOfMonth).reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
-    // Revenue by day (last 7 days)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(now);
       d.setDate(d.getDate() - (6 - i));
@@ -118,7 +130,7 @@ router.get("/admin/dashboard", async (req, res) => {
 });
 
 router.get("/admin/sellers", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const { status } = req.query as Record<string, string>;
     const conditions: SQL[] = [];
@@ -140,7 +152,7 @@ router.get("/admin/sellers", async (req, res) => {
 });
 
 router.patch("/admin/sellers/:shopId/approve", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const shopId = parseInt(req.params.shopId, 10);
     const body = ApproveSellerBody.parse(req.body);
@@ -160,7 +172,7 @@ router.patch("/admin/sellers/:shopId/approve", async (req, res) => {
 });
 
 router.get("/admin/users", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const { role, limit } = req.query as Record<string, string>;
     const lim = Math.min(parseInt(limit ?? "100", 10), 500);
@@ -189,7 +201,7 @@ router.get("/admin/users", async (req, res) => {
 });
 
 router.patch("/admin/users/:replitId/role", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const { replitId } = req.params;
     const body = UpdateUserRoleBody.parse(req.body);
@@ -209,7 +221,7 @@ router.patch("/admin/users/:replitId/role", async (req, res) => {
 });
 
 router.get("/admin/orders", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const { status, limit } = req.query as Record<string, string>;
     const lim = Math.min(parseInt(limit ?? "50", 10), 200);
@@ -251,7 +263,7 @@ router.get("/admin/orders", async (req, res) => {
 });
 
 router.get("/admin/feedback", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const feedbackList = await db
       .select({ fb: feedbackTable, userName: userProfilesTable.name })
@@ -283,7 +295,7 @@ function toCSV(headers: string[], rows: (string | number | null | undefined)[][]
 }
 
 router.get("/admin/export/orders", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const orders = await db
       .select({ order: ordersTable, shopName: shopsTable.name })
@@ -310,7 +322,7 @@ router.get("/admin/export/orders", async (req, res) => {
 });
 
 router.get("/admin/export/users", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const users = await db
       .select({ profile: userProfilesTable, phone: usersTable.phone })
@@ -337,7 +349,7 @@ router.get("/admin/export/users", async (req, res) => {
 });
 
 router.get("/admin/export/products", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!await requireAdmin(req, res)) return;
   try {
     const products = await db
       .select({ product: productsTable, shopName: shopsTable.name })
