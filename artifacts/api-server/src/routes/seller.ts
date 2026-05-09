@@ -14,6 +14,7 @@ import {
   UpdateSellerProductBody,
   UpdateSellerOrderStatusBody,
 } from "@workspace/api-zod";
+import { broadcastToUser } from "../lib/ws";
 
 const router = Router();
 
@@ -317,6 +318,14 @@ router.patch("/seller/orders/:orderId/status", async (req, res) => {
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Order not found" });
+
+    // Broadcast real-time status update to the customer
+    broadcastToUser(updated.userId, {
+      type: "order_status",
+      orderId: updated.id,
+      status: updated.status,
+      updatedAt: updated.updatedAt.toISOString(),
+    });
 
     const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, orderId));
     res.json({
