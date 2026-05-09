@@ -1,0 +1,218 @@
+CRITICAL STABILIZATION PHASE
+
+The app currently has many frontend UI components working visually, but backend/API integrations are incomplete or failing.
+
+DO NOT redesign UI.
+DO NOT recreate components.
+Focus on FULL BACKEND STABILIZATION and REAL FUNCTIONALITY.
+
+IMPORTANT:
+Continue from current existing codebase.
+Preserve all existing architecture and styling.
+
+MAIN TASK:
+Fix all fake/mock functionality and make features REAL end-to-end.
+
+========================
+PHASE 1 — API + DATABASE STABILIZATION
+======================================
+
+Fix all broken submissions and backend integrations.
+
+CURRENTLY FAILING:
+
+* shop registration
+* add product
+* profile update
+* feedback/contact form
+* add to cart
+* checkout/order creation
+
+Requirements:
+
+* ensure frontend actually calls backend correctly
+* fix axios/fetch endpoints
+* fix Prisma DB writes
+* fix validation issues
+* add proper try/catch handling
+* add real success responses
+* add proper error responses
+* remove fake success toasts
+* only show success after actual DB/API success
+
+Implement:
+
+* loading states
+* disabled submit buttons during API calls
+* proper validation errors
+* mobile-safe form handling
+
+========================
+PHASE 2 — PROFILE SYSTEM
+========================
+
+Profile currently shows success toast but data does not persist.
+
+Fix:
+
+* profile DB update
+* user context refresh
+* persistent profile storage
+* image upload
+* address saving
+* phone/email syncing
+
+Ensure updated data appears immediately after save.
+
+========================
+PHASE 3 — SELECT DROPDOWN + MOBILE FIXES
+========================================
+
+Fix category dropdown scrolling issues.
+
+Requirements:
+
+* proper z-index
+* proper mobile scrolling
+* proper overflow handling
+* touch-friendly selects
+* responsive modal behavior
+
+Fix all mobile UI clipping issues.
+
+========================
+PHASE 4 — REAL AI CHATBOT
+=========================
+
+Current chatbot uses fake hardcoded replies.
+
+Implement real AI assistant.
+
+Requirements:
+
+* backend chatbot API
+* AI service integration
+* contextual responses
+* nearby shop help
+* product recommendation help
+* order support help
+* multilingual responses
+
+Maintain existing chatbot UI.
+
+========================
+PHASE 5 — CONTACT + FEEDBACK SYSTEM
+===================================
+
+Current contact form fails.
+
+Implement:
+
+* backend feedback API
+* Prisma feedback model
+* DB storage
+* admin dashboard feedback viewer
+* email sending support
+
+Send all forms to:
+[bhavishyadwivedi786@gmail.com](mailto:bhavishyadwivedi786@gmail.com)
+
+========================
+PHASE 6 — GOOGLE MAPS + GPS
+===========================
+
+Current nearby shops are static UI only.
+
+Implement:
+
+* Google Maps SDK
+* current GPS location
+* nearby real shops
+* radius filtering
+* distance calculation
+* shop map markers
+
+========================
+PHASE 7 — REAL KYC SYSTEM
+=========================
+
+Current Aadhaar upload is UI only.
+
+Implement hybrid verification:
+
+LEVEL 1:
+OCR extraction from Aadhaar/PAN
+
+LEVEL 2:
+AI fraud detection:
+
+* blurry image
+* screenshot detection
+* edited image detection
+* fake template detection
+
+LEVEL 3:
+manual admin approval system
+
+Admin must review:
+
+* uploaded document
+* OCR data
+* fraud score
+
+Seller sees:
+
+* pending
+* approved
+* rejected
+
+========================
+PHASE 8 — ADMIN + ROLE SYSTEM
+=============================
+
+Make permanent admin accounts:
+
+SUPER_ADMIN:
+8269352413
+
+ADMIN:
+[bhavishyadwivedi786@gmail.com](mailto:bhavishyadwivedi786@gmail.com)
+
+Implement:
+
+* protected admin routes
+* role middleware
+* seller approval system
+* admin dashboard controls
+
+========================
+PHASE 9 — PRODUCTION STABILITY
+==============================
+
+Add:
+
+* centralized API handling
+* reusable toast system
+* global error handling
+* retry handling
+* API timeout handling
+* loading skeletons
+* optimistic UI fixes
+
+IMPORTANT:
+
+* fix all runtime errors automatically
+* maintain TypeScript safety
+* maintain Prisma compatibility
+* ensure app runs with pnpm dev
+
+AFTER EVERY MAJOR FIX:
+
+* explain changed files
+* explain backend changes
+* explain Prisma changes
+* explain API fixes
+* explain frontend fixes
+
+DO NOT STOP AFTER SMALL CHANGES.
+COMPLETE EACH FEATURE END-TO-END.
