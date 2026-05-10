@@ -108,7 +108,7 @@ export function CartPage() {
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem({ cartItemId: item.id })}
                         disabled={removing}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                       >
@@ -118,9 +118,9 @@ export function CartPage() {
                         <button
                           onClick={() => {
                             if (item.quantity === 1) {
-                              removeItem(item.id);
+                              removeItem({ cartItemId: item.id });
                             } else {
-                              updateItem({ cartItemId: item.id, quantity: item.quantity - 1 });
+                              updateItem({ cartItemId: item.id, data: { quantity: item.quantity - 1 } });
                             }
                           }}
                           className="w-7 h-7 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
@@ -129,7 +129,7 @@ export function CartPage() {
                         </button>
                         <span className="text-sm font-bold text-primary w-6 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateItem({ cartItemId: item.id, quantity: item.quantity + 1 })}
+                          onClick={() => updateItem({ cartItemId: item.id, data: { quantity: item.quantity + 1 } })}
                           className="w-7 h-7 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
                         >
                           <Plus className="h-3.5 w-3.5" />

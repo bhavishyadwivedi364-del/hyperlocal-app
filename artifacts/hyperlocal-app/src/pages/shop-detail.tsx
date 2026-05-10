@@ -135,7 +135,7 @@ export function ShopDetailPage() {
                     size="icon"
                     className="h-7 w-7 rounded-full"
                     disabled={!product.inStock || isPending}
-                    onClick={() => addToCart({ productId: product.id, quantity: 1 })}
+                    onClick={() => addToCart({ data: { productId: product.id, quantity: 1 } })}
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>

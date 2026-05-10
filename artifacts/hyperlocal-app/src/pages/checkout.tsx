@@ -62,7 +62,7 @@ export function CheckoutPage() {
       onSuccess: (order) => {
         queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
         if (address.trim()) {
-          updateProfile({ address: address.trim(), city: city.trim() || undefined });
+          updateProfile({ data: { address: address.trim(), city: city.trim() || undefined } });
         }
         toast({ title: "Order placed successfully!" });
         setLocation(`/order/${order.id}`);
@@ -79,9 +79,11 @@ export function CheckoutPage() {
 
   const handlePlaceNonRazorpayOrder = useCallback(() => {
     placeOrder({
-      paymentMethod: paymentMethod === "upi" ? "online" : paymentMethod,
-      deliveryAddress: `${name ? name + ", " : ""}${address.trim()}${city ? ", " + city : ""}`,
-      deliveryNotes: notes.trim() || undefined,
+      data: {
+        paymentMethod: paymentMethod === "upi" ? "online" : paymentMethod,
+        deliveryAddress: `${name ? name + ", " : ""}${address.trim()}${city ? ", " + city : ""}`,
+        deliveryNotes: notes.trim() || undefined,
+      },
     });
   }, [paymentMethod, name, address, city, notes, placeOrder]);
 
@@ -107,9 +109,11 @@ export function CheckoutPage() {
             description: "Placing order with payment pending. Please set up Razorpay keys.",
           });
           placeOrder({
-            paymentMethod: "online",
-            deliveryAddress: deliveryAddr,
-            deliveryNotes: notes.trim() || undefined,
+            data: {
+              paymentMethod: "online",
+              deliveryAddress: deliveryAddr,
+              deliveryNotes: notes.trim() || undefined,
+            },
           });
           return;
         }
@@ -154,7 +158,7 @@ export function CheckoutPage() {
               if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed");
 
               queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-              if (address.trim()) updateProfile({ address: address.trim(), city: city.trim() || undefined });
+              if (address.trim()) updateProfile({ data: { address: address.trim(), city: city.trim() || undefined } });
               toast({ title: "Payment successful!", description: "Your order has been placed." });
               setLocation(`/order/${verifyData.orderId}`);
               resolve();

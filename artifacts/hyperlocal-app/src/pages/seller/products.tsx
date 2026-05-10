@@ -132,8 +132,8 @@ export function SellerProducts() {
       stockQuantity: form.stockQuantity ? parseInt(form.stockQuantity, 10) : undefined,
       inStock: form.inStock,
     };
-    if (editId) updateProduct({ productId: editId, ...payload });
-    else createProduct(payload);
+    if (editId) updateProduct({ productId: editId, data: payload });
+    else createProduct({ data: payload });
   }
 
   const inStockCount = products?.filter((p: any) => p.inStock).length ?? 0;
@@ -197,7 +197,7 @@ export function SellerProducts() {
                 </Button>
                 <Button
                   size="icon" variant="ghost" className="h-8 w-8 text-destructive"
-                  onClick={() => deleteProduct(product.id)}
+                  onClick={() => deleteProduct({ productId: product.id })}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

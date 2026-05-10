@@ -126,7 +126,7 @@ export function AdminSellers() {
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs flex-1"
-                      onClick={() => approveSeller({ shopId: seller.id, status: "active" })}
+                      onClick={() => approveSeller({ shopId: seller.id, data: { status: "active" } })}
                     >
                       {t("approveSeller")}
                     </Button>
@@ -134,7 +134,7 @@ export function AdminSellers() {
                   {seller.status === "active" && (
                     <Button
                       size="sm" variant="destructive" className="h-8 text-xs flex-1"
-                      onClick={() => approveSeller({ shopId: seller.id, status: "suspended" })}
+                      onClick={() => approveSeller({ shopId: seller.id, data: { status: "suspended" } })}
                     >
                       {t("suspendSeller")}
                     </Button>
@@ -142,7 +142,7 @@ export function AdminSellers() {
                   {seller.status === "suspended" && (
                     <Button
                       size="sm" variant="outline" className="h-8 text-xs flex-1"
-                      onClick={() => approveSeller({ shopId: seller.id, status: "active" })}
+                      onClick={() => approveSeller({ shopId: seller.id, data: { status: "active" } })}
                     >
                       Reactivate
                     </Button>
@@ -150,7 +150,7 @@ export function AdminSellers() {
                   {seller.status === "pending" && (
                     <Button
                       size="sm" variant="destructive" className="h-8 text-xs"
-                      onClick={() => approveSeller({ shopId: seller.id, status: "suspended" })}
+                      onClick={() => approveSeller({ shopId: seller.id, data: { status: "suspended" } })}
                     >
                       Reject
                     </Button>

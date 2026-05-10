@@ -118,8 +118,8 @@ export function SellerShopProfile() {
       minimumOrder: minimumOrder ? parseFloat(minimumOrder) : undefined,
       isOpen,
     };
-    if (shop) updateShop(payload);
-    else createShop(payload);
+    if (shop) updateShop({ data: payload });
+    else createShop({ data: payload });
   }
 
   const shopExists = !!shop && !error;

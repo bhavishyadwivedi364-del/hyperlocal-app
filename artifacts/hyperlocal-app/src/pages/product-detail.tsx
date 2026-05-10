@@ -132,7 +132,7 @@ export function ProductDetailPage() {
         <Button
           className="flex-1 gap-2"
           disabled={!product.inStock || isPending}
-          onClick={() => addToCart({ productId: product.id, quantity: qty })}
+          onClick={() => addToCart({ data: { productId: product.id, quantity: qty } })}
         >
           <ShoppingCart className="h-4 w-4" />
           Add to Cart — ₹{(product.price * qty).toFixed(2)}

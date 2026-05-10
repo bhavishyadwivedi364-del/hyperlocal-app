@@ -43,23 +43,20 @@ export function ContactPage() {
     setAiInput("");
     setAiLoading(true);
 
-    // AI assistant placeholder - simulates a response
-    await new Promise((r) => setTimeout(r, 800));
-    const responses: Record<string, string> = {
-      "order": "You can track your order from the Orders section in the app. If there's an issue, please submit a complaint below.",
-      "delivery": "We partner with local shops for delivery. Typical delivery time is 30-60 minutes depending on your location.",
-      "payment": "We support Cash on Delivery (COD) and online payments via Razorpay. UPI payments coming soon!",
-      "refund": "Refunds are processed within 3-5 business days for online payments. COD orders are non-refundable.",
-      "seller": "To become a seller, switch your role to 'Seller' in Profile. Then register your shop and wait for admin approval.",
-      "cancel": "You can cancel an order before it is dispatched. Contact support if you need help.",
-    };
-    const aiResponse = Object.entries(responses).find(([k]) => userMsg.toLowerCase().includes(k));
-    const reply = aiResponse
-      ? aiResponse[1]
-      : "I'm here to help! For specific issues, please fill out the contact form below or call our support number.";
-
-    setAiChat((c) => [...c, { role: "ai", text: reply }]);
-    setAiLoading(false);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg }),
+      });
+      const data = await res.json();
+      const reply = data.reply ?? data.message ?? "I'm here to help! For specific issues, please fill out the contact form below or call our support number.";
+      setAiChat((c) => [...c, { role: "ai", text: reply }]);
+    } catch {
+      setAiChat((c) => [...c, { role: "ai", text: "Sorry, I'm having trouble connecting. Please try again or use the contact form below." }]);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const faqItems = [
@@ -195,7 +192,7 @@ export function ContactPage() {
               <Button
                 className="w-full"
                 disabled={!message.trim() || isPending}
-                onClick={() => createFeedback({ rating, comment: message.trim(), type })}
+                onClick={() => createFeedback({ data: { rating, comment: message.trim(), type } })}
               >
                 {isPending ? "Submitting..." : t("submit")}
               </Button>

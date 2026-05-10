@@ -45,7 +45,7 @@ export function ProfilePage() {
   };
 
   const save = () => {
-    updateProfile({ name, phone, address, city });
+    updateProfile({ data: { name, phone, address, city } });
     setEditing(false);
   };
 
@@ -117,7 +117,7 @@ export function ProfilePage() {
                   <Label className="text-xs text-muted-foreground">{t("city")}</Label>
                   <Input value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 h-10" placeholder="City" />
                 </div>
-                <Button onClick={save} disabled={isPending} className="w-full" size="sm">
+                <Button onClick={() => { updateProfile({ data: { name, phone, address, city } }); setEditing(false); }} disabled={isPending} className="w-full" size="sm">
                   {isPending ? "Saving..." : t("saveChanges")}
                 </Button>
               </>
@@ -141,7 +141,7 @@ export function ProfilePage() {
             {(["en", "hi"] as const).map((l) => (
               <button
                 key={l}
-                onClick={() => { setLang(l); updateProfile({ language: l }); }}
+                onClick={() => { setLang(l); updateProfile({ data: { language: l } }); }}
                 className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-colors ${lang === l ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"}`}
               >
                 {l === "en" ? "🇬🇧 English" : "🇮🇳 हिंदी"}

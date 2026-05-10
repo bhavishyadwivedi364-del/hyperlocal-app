@@ -109,7 +109,7 @@ export function SellerOrders() {
                     {next && (
                       <Button
                         size="sm"
-                        onClick={() => updateStatus({ orderId: (order as any).id, status: next })}
+                        onClick={() => updateStatus({ orderId: (order as any).id, data: { status: next } })}
                         className="capitalize"
                       >
                         Mark as {next}

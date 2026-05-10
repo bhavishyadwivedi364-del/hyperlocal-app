@@ -175,7 +175,7 @@ export function Home() {
                         <button
                           onClick={(e) => {
                             e.preventDefault();
-                            addToCart({ productId: product.id, quantity: 1 });
+                            addToCart({ data: { productId: product.id, quantity: 1 } });
                           }}
                           className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
                         >
